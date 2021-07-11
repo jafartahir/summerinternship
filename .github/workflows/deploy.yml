@@ -1,0 +1,58 @@
+name: Deploy Serverless Application
+
+on:
+  push:
+    branches: [ develop, main ]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+    steps:
+      - name: Setup NodeJS
+        uses: actions/setup-node@v1
+        with:
+          node-version: '10.x'
+
+      - name: Setup Python3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+
+      - name: Install Serverless Framework
+        run: npm install -g serverless
+
+      - name: Serverless AWS authentication
+        run: sls config credentials --provider aws --key ${{ secrets.AWS_ACCESS_KEY_ID }} --secret ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Check out the repo
+        uses: actions/checkout@v2
+
+      - name: Set branch name
+        run: echo "BRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
+      - name: Set master branch stage
+        if: ${{ env.BRANCH == 'main' }}
+        run: |
+          echo "STAGE=prod" >> $GITHUB_ENV
+
+      - name: Set develop branch stage
+        if: ${{ env.BRANCH == 'develop' }}
+        run: |
+          echo "STAGE=dev" >> $GITHUB_ENV
+
+      - name: Set default stage
+        if: ${{ env.STAGE == '' }}
+        run: |
+          echo "STAGE=dev" >> $GITHUB_ENV
+
+      - name: Install NPM dependencies
+        run: cd src && npm install
+
+      - name: Deploy Lambda functions
+        run: cd src && sls deploy -s ${{ env.STAGE }} -v

@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, make_response
+from flask import Flask, jsonify, make_response, request
 from pynamodb.models import Model
 from pynamodb.attributes import UnicodeAttribute, NumberAttribute
 import random
@@ -21,15 +21,83 @@ def students():
 
 
 @app.route("/admission", methods=["GET", "POST", "PUT", "DELETE"])
-def hello():
-    item = SongsModel("Romero Allen", "Atomic Dim")
-    item.update(
-        actions=[
-            SongsModel.id.set(str(random.randint(100, 999)))
-        ]
-    )
-    return jsonify(message='Hello from path!')
-
+def student():
+    try:
+        student_data = request.get_json()['student']
+        print(student_data)
+        institute = student_data['institute']
+        enrollment = student_data['enrollment']
+        if request.method == "PUT":
+            try:
+                item = AdmissionModel.get(
+                    hash_key = institute,
+                    range_key = enrollment
+                )
+                actions = []
+                if 'name' in student_data:
+                    actions.append(AdmissionModel.name.set(student_data['name']))
+                if 'branch' in student_data:
+                    actions.append(AdmissionModel.branch.set(student_data['branch']))
+                if 'batch' in student_data:
+                    actions.append(AdmissionModel.batch.set(student_data['batch']))
+                if len(actions):
+                    print(actions)
+                    item.update(actions = actions)
+            except AdmissionModel.DoesNotExist as e:
+                print(e)
+                return make_response(
+                    jsonify(error='Student not found. Please check institute and enrollment information.'),
+                    500
+                )
+        elif request.method == "POST":
+            try:
+                item = AdmissionModel.get(
+                    hash_key = institute,
+                    range_key = enrollment
+                )
+                return make_response(
+                    jsonify(error='Student already exists.'),
+                    500
+                )
+            except AdmissionModel.DoesNotExist as e:
+                AdmissionModel(
+                    institute = student_data['institute'],
+                    enrollment = student_data['enrollment'],
+                    name = student_data['name'],
+                    branch = student_data['branch'],
+                    batch = student_data['batch']
+                ).save()
+        elif request.method == "GET":
+            try:
+                item = AdmissionModel.get(
+                    hash_key = institute,
+                    range_key = enrollment
+                )
+                return item.attribute_values
+            except AdmissionModel.DoesNotExist as e:
+                return make_response(
+                    jsonify(error='Student does not exist.'),
+                    500
+                )
+        elif request.method == "DELETE":
+            try:
+                item = AdmissionModel.get(
+                    hash_key = institute,
+                    range_key = enrollment
+                )
+                item.delete()
+            except AdmissionModel.DoesNotExist as e:
+                return make_response(
+                    jsonify(error='Student does not exist.'),
+                    500
+                )
+        return {}
+    except Exception as e:
+        print(e)
+        return make_response(
+            jsonify(error='Unexpected error.'),
+            500
+        )
 
 @app.errorhandler(404)
 def resource_not_found(e):

@@ -29,6 +29,8 @@ functions:
       - http:
           path: /{proxy+}
           method: ANY
+    environment:
+      STAGE: ${env:STAGE}
 
 resources:
   Resources:

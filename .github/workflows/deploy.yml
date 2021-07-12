@@ -52,7 +52,7 @@ jobs:
           echo "STAGE=dev" >> $GITHUB_ENV
 
       - name: Install NPM dependencies
-        run: cd src && npm install
+        run: npm install
 
       - name: Deploy Lambda functions
-        run: cd src && sls deploy -s ${{ env.STAGE }} -v
+        run: sls deploy -s ${{ env.STAGE }} -v

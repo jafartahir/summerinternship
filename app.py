@@ -1,13 +1,15 @@
 from flask import Flask, jsonify, make_response, request
 from pynamodb.models import Model
 from pynamodb.attributes import UnicodeAttribute, NumberAttribute
-import random
+import os
 
 app = Flask(__name__)
 
+STAGE = os.environ['STAGE']
+
 class AdmissionModel(Model):
     class Meta:
-        table_name = 'NewAdmissions'
+        table_name = f'NewAdmissions-{STAGE}'
 
     institute = UnicodeAttribute(hash_key = True)
     enrollment = UnicodeAttribute(range_key = True)

@@ -39,9 +39,9 @@ def student():
                 if 'name' in student_data:
                     actions.append(AdmissionModel.name.set(student_data['name']))
                 if 'branch' in student_data:
-                    actions.append(AdmissionModel.branch.set(student_data['name']))
+                    actions.append(AdmissionModel.branch.set(student_data['branch']))
                 if 'batch' in student_data:
-                    actions.append(AdmissionModel.batch.set(student_data['name']))
+                    actions.append(AdmissionModel.batch.set(student_data['batch']))
                 if len(actions):
                     print(actions)
                     item.update(actions = actions)

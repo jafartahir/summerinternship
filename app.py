@@ -25,7 +25,7 @@ def students():
 @app.route("/admission", methods=["GET", "POST", "PUT", "DELETE"])
 def student():
     try:
-        student_data = request.get_json()['s1tudent']
+        student_data = request.get_json()['student']
         print(student_data)
         institute = student_data['institute']
         enrollment = student_data['enrollment']
